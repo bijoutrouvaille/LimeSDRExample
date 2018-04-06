@@ -84,9 +84,12 @@ class Channel {
 
 complex<float> bitFunc(bool x, int n, int bw, double carrier, double rate) {
   double t = n / rate;
-  complex<float> th(0, 2 * PI * t * (carrier + bw*x));
-  complex<float> b = exp(th);
-  // cout << "sending bit " << real(b) << " + i"<<imag(b) << endl;
+  // complex<float> th(0, 2 * PI );
+  // complex<float> th(0, 2 * PI * t * (carrier + bw*x));
+  // complex<float> b = exp(th);// * complex<float>(256,0);
+  // complex<float> b(1 - 2*x,0);
+  
+  complex<float> b((1 - 2*x)*sin(carrier*t),0);
   return b;
 }
 
@@ -100,9 +103,10 @@ void bit(complex<float> *buff, int len, bool x, int bw, double carrier, double r
 int main(int argc, char *argv[])
 {
   double carrierFreq = 467.637e+6;
-  int bandwidth = 2000;
+  int bandwidth = 1000;
   float ampl = 1.0;
   double rate = 44100;
+
 
   SoapySDR::Kwargs args;
   if (argc > 1)
@@ -115,33 +119,35 @@ int main(int argc, char *argv[])
   o.bandwidth = 5e+6;
   o.sampleRate = rate;
   o.channel = 0;
-  o.gain = 30;
+  o.gain = 35;
   o.RXTX = SOAPY_SDR_TX;
 
-  Channel channel(sdr, o);
+  Channel* channel = new Channel(sdr, o);
 
-  size_t streamMTU = channel.mtu();
-  int buffLen = bitLen(rate, 2);
+  size_t streamMTU = channel->mtu();
+  // int buffLen = bitLen(rate, 1);
   
-  complex<float> buff[buffLen];
-
-  for (int q=0; q < 10; q++) {
-    bit(buff, buffLen, 0, bandwidth, carrierFreq, rate); 
-    cout << "cycle " << q << endl;
-    cout << "sent 0 " << endl;
-    bit(buff, buffLen, 1, bandwidth, carrierFreq, rate); 
-    cout << "sent 1 " << endl;
-    int ret = channel.send(buff, buffLen);
-//    printf("ret=%d, flags=%d, tdiff=%lld, timeNs=%d\n", ret, flags, tdiff/1000000, timeNs);
-    // if (ret < 0)
-    //   cout << "ERROR" << endl;
-    // else if (ret == 0)
-    //   cout << "ZERO samples" << endl;
-    // else {
+  // complex<float> buff[buffLen];
+  complex<float> buff[streamMTU];
+  int msg[] = {0,0,0,1,1,1,0,0,1,0,0,1,1,1};
+  int msgi = 0;
+  int msgl = sizeof(msg)/sizeof(msg[0]);
+  for (int q=0; q < 10 || true; q++) {
+    for (int n=0; n<streamMTU; n++) {
+      bool b = msg[n%msgl];
+      buff[n] = bitFunc(b, q*streamMTU + n, bandwidth, carrierFreq, rate);
+    }
+    // for (int n=0; n<streamMTU; n++) {
+    //   int rep = 2;
+    //   bool b = n%rep < rep/2;
+    //   buff[n] = bitFunc(b, q*streamMTU + n, bandwidth, carrierFreq, rate);
     // }
+    cout << "cycle " << q << endl;
+    int ret = channel->send(buff, streamMTU);
   }
 
   cout << "hello";
+  delete channel;
   SoapySDR::Device::unmake(sdr);
   return 0;
 }
