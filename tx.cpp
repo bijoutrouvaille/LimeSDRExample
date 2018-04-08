@@ -129,14 +129,24 @@ int main(int argc, char *argv[])
   
   // complex<float> buff[buffLen];
   complex<float> buff[streamMTU];
-  int msg[] = {0,0,0,1,1,1,0,0,1,0,0,1,1,1};
+  int msg[] = {0,0,0,1,1,1,0,0,1,0,0,1,1,1}; //17
   int msgi = 0;
-  int msgl = sizeof(msg)/sizeof(msg[0]);
+  int msgl = 17;
+  // int msgl = sizeof(msg)/sizeof(msg[0]);
+  cout << "msg length: " << msgl << endl; //17
   for (int q=0; q < 10 || true; q++) {
     for (int n=0; n<streamMTU; n++) {
-      bool b = msg[n%msgl];
-      buff[n] = bitFunc(b, q*streamMTU + n, bandwidth, carrierFreq, rate);
+      if (true) { // send message
+        bool b = msg[n%msgl];
+        buff[n] = bitFunc(
+            b, q*streamMTU + n
+            , bandwidth, carrierFreq, rate
+        );
+      } else {
+        buff[n] = complex<float>(0,0);
+      }
     }
+
     // for (int n=0; n<streamMTU; n++) {
     //   int rep = 2;
     //   bool b = n%rep < rep/2;
