@@ -16,17 +16,19 @@ Simply clone the repository
 
 First, `cd LimeSDRExample`.
 
-Start the RX side (rx.cpp). Will record several hundred thousand samples into flyrx.wav and quit.
+Start the Rx side (rx.cpp). Will record several hundred thousand samples into flyrx.wav and quit.
 
 ```
 make r
 ```
 
-Start the TX side (tx.cpp). Will transmit the entire fly44100.wav over the in-phase component and then quit.
+Start the Tx side (tx.cpp). Will transmit the entire fly44100.wav over the in-phase component and then quit.
 
 ```
 make t
 ```
+
+Make sure to run Tx quickly after the Rx in order to capture all the samples.
 
 ## Notes
 
