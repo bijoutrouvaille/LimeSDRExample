@@ -1,6 +1,6 @@
 # Lime USB example
 
-Demonstrates sending and receiving using SoapySDR.
+Demonstrates sending and receiving using SoapySDR. Currently does _not_ work.
 
 ## Requirements
 
@@ -34,7 +34,7 @@ Make sure to run Tx quickly after the Rx in order to capture all the samples.
 
 ### Channel.cpp
 
-A simple abstraction to write or read data to/from SoapySDR in Stream MTU increments.
+A simple abstraction to write or read data to/from SoapySDR in Stream MTU increments. 
 
 ### lib/AudioFile
 
