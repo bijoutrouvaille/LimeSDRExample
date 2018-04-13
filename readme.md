@@ -34,7 +34,7 @@ Make sure to run Tx quickly after the Rx in order to capture all the samples.
 
 ### Channel.cpp
 
-A simple abstraction to write or read data to/from SoapySDR.
+A simple abstraction to write or read data to/from SoapySDR in Stream MTU increments.
 
 ### lib/AudioFile
 
