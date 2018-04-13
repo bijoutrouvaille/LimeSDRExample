@@ -23,10 +23,7 @@ int main(int argc, char *argv[])
     args.insert(make_pair("serial", string(argv[1])));
   SoapySDR::Device *sdr = SoapySDR::Device::make(args);
 
-  printf("imag unit: %f", imag(sqrt(-1)));
-
   double carrierFreq = 467.637e+6;
-  double threshold = 0.02; // amplitude detection threshold
   int rxChan = 0;
   float ampl = 1.0;
   int rate = 44100;
