@@ -18,14 +18,10 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-  double carrierFreq = 467.637e+6;
-  int bandwidth = 1000;
-  double ampl = 1.0;
-  // double rate = 44100;
-  // double rate = 1.01e5;
 
   AudioFile<double> audioFile;
   audioFile.load("fly44100.wav");
+
   double rate = audioFile.getSampleRate();
   int numSamples = audioFile.getNumSamplesPerChannel();
 
@@ -38,7 +34,7 @@ int main(int argc, char *argv[])
 
   ChannelOpts o;
 
-  o.carrierFreq = carrierFreq; 
+  o.carrierFreq = 467.637e+6; 
   o.bandwidth = 5e+6;
   o.sampleRate = rate;
   o.channel = 0;
@@ -47,34 +43,18 @@ int main(int argc, char *argv[])
 
   Channel* channel = new Channel(sdr, o);
 
-  // PRINT INFO
-  // channel->printInfo(); return 0;
+  complex<float> buff[numSamples];
+  for (int i=0;i<numSamples;i++) 
+    buff[i] = complex<float>(audioFile.samples[0][i], 0);
 
-  size_t streamMTU = channel->mtu();
-  
-  complex<float> buff[streamMTU];
-  // int msg[] = {0,0,0,1,1,1,0,0,1,0,0,1,1,1}; //17
+  channel->send(buff, numSamples);
 
-  // double mtuspsec = rate / streamMTU;
-  complex<float> bb[numSamples];
-  for (int i=0;i<numSamples;i++) bb[i] = complex<float>(audioFile.samples[0][i], 0);
-
-  for (int i=0; i<50;i++) cout << bb[i] << endl;
-  channel->send(bb, numSamples);
-  // for (int q=0; q < mtuspsec*20; q++) {
-  //   for (int n=0; n < streamMTU; n++) {
-  //     int nt = n + streamMTU*q;
-  //     double t = nt / rate;
-  //     buff[n] = complex<float>(sin(2 * PI * 1000 * t/rate), 0);
-  //   }
-  //   int ret = channel->sendMTU(buff, streamMTU);
-  //
-  //   cout << "cycle " << q << endl;
-  // }
-
-  cout << "done";
-  channel->gain(-12);
+  // kill the volume, otherwise the SDR will continue 
+  // transmitting the carrier wave even after shutdown.
+  channel->gain(-12); 
   delete channel;
   SoapySDR::Device::unmake(sdr);
+
+  cout << "done";
   return 0;
 }

@@ -7,10 +7,7 @@
 #include <SoapySDR/Constants.h>
 #include <SoapySDR/Formats.hpp>
 #include <SoapySDR/Errors.hpp>
-#include <signal.h>
 #include <fstream>
-#include <deque>
-#include <cstdint> // int32_t
 #include <string>
 #include "Channel.cpp"
 #include "./lib/AudioFile/AudioFile.cpp"
@@ -18,17 +15,6 @@
 using namespace std;
 
 double PI = acos(-1);
-
-// sum of the register
-complex<int> regSum(deque<int> q) {
-  complex<int> r(0,0);
-  deque<int> :: iterator it;
-  for (it = q.begin(); it != q.end(); ++it) {
-    // if 0 then 0, if 1 then 1, if -1 then complex unit i
-    r += sqrt(*it); 
-  }
-  return r;
-}
 
 int main(int argc, char *argv[])
 {
@@ -44,7 +30,6 @@ int main(int argc, char *argv[])
   int rxChan = 0;
   float ampl = 1.0;
   int rate = 44100;
-  // double rate = 1.01e5;
 
   ChannelOpts o;
 
@@ -57,26 +42,19 @@ int main(int argc, char *argv[])
 
   Channel* channel = new Channel(sdr, o);
 
-  size_t streamMTU = channel->mtu();
-  complex<float>* buff;
-
-  wavelog.open("wavlog.csv");
-  wavelog << "signalI" << endl;
-
-
-  long rec = 800000;
+  long numOfSamples = 800000; // number of samples to record
+  
   AudioFile<float> audio;
-  audio.setAudioBufferSize(1, rec);
+  audio.setAudioBufferSize(1, numOfSamples); // 1 channel
   audio.setBitDepth(16);
   audio.setSampleRate(rate);
 
-  complex<float> samples[rec];
-  channel->read(samples, rec);
-  for (int i=0; i<rec; i++) 
+  complex<float> samples[numOfSamples];
+  channel->read(samples, numOfSamples); 
+
+  for (int i=0; i<numOfSamples; i++) 
     audio.samples[0][i] = real(samples[i]);
   audio.save("flyrx.wav", AudioFileFormat::Wave);
-
-  wavelog.close();
 
   delete channel;
   SoapySDR::Device::unmake(sdr);

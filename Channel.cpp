@@ -8,12 +8,11 @@
 #include <SoapySDR/Constants.h>
 #include <SoapySDR/Formats.hpp>
 #include <SoapySDR/Errors.hpp>
-#include <signal.h>
 
 using namespace std;
 
 struct ChannelOpts {
-  int RXTX;
+  int RXTX; // SOAPY_SDR_TX/RX
   long carrierFreq;
   long bandwidth;
   double sampleRate;
@@ -21,6 +20,7 @@ struct ChannelOpts {
   int gain = 10;
   int timeoutUs = 2e+6;
 };
+
 class Channel {
   private:
     SoapySDR::Device *sdr;
@@ -46,7 +46,12 @@ class Channel {
       sdr->setGain(o.RXTX, o.channel, o.gain);
       this->buff = new complex<float>[this->_mtu]();
     }
-    size_t mtu() { return this->_mtu; }
+
+    size_t mtu() { 
+      return this->_mtu; 
+    }
+
+    // send an MTU-sized buffer
     int sendMTU(complex<float>* buff, long len) {
       void *buffs[] = {buff};
       int flags;
@@ -60,6 +65,9 @@ class Channel {
           this->stream, buffs, len, flags, timeNs, timeoutUs);
       return ret;
     }
+
+    // send an arbitrarily sized buffer,
+    // regardless of MTU size.
     int send(complex<float>* buff, long len) {
       int mtu = this->mtu();
       int chunks = ceil(len/mtu);
@@ -74,46 +82,52 @@ class Channel {
       }
       return sent;
     }
-    complex<float>* readMTU() {
+    int readMTU(complex<float>* buff) {
       size_t mtu = this->mtu(); 
       complex<float> res[mtu];
-      void* buffs[] = {this->buff};
+      void* buffs[] = {buff};
       long long timeNs = 0;
-      long timeoutUs = 1e6;
+      long timeoutUs = this->o.timeoutUs;
       int flags = 0;
       int ret = this->sdr->readStream(
         this->stream, buffs,
-        mtu, flags, timeNs, timeoutUs);
-      return this->buff;
+        mtu, flags, timeNs, timeoutUs
+      );
+      return ret;
     }
+
     void read(complex<float>* res, int count) {
       int mtu = this->mtu(); 
       
-      complex<float>*buff;
+      complex<float>*buff = this->buff;
       for (int i=0;i < count; i++) {
         if (i%mtu==0) {
-          buff = this->readMTU();
+          this->readMTU(buff);
         }
         res[i] = buff[i%mtu];
       }
     }
+
     void gain(double val) {
       this->sdr->setGain(this->o.RXTX, this->o.channel, val);
     }
+
     void printGainRange() {
       auto r = this->sdr->getGainRange(this->o.RXTX, this->o.channel);
       printf("GAIN RANGE %g - %g, step: %g\n", r.minimum(), r.maximum(), r.step());
     }
+
     void printRateRange() {
       auto r = this->sdr->getSampleRateRange(this->o.RXTX, this->o.channel);
       for (int i=0;i<r.size();i++)
       printf("SAMPLE RATE RANGE %g - %g, step: %g\n", r[i].minimum(), r[i].maximum(), r[i].step());
     
     }
+
     void printInfo() {
       this->printGainRange();
       this->printRateRange();
       printf("MTU %zd", this->mtu());
     }
-};
 
+};
