@@ -40,6 +40,3 @@ A simple abstraction to write or read data to/from SoapySDR in Stream MTU increm
 
 A library provided by https://github.com/adamstark/AudioFile to easily read/write WAV files.
 
-## LICENSE
-
-Public Domain
