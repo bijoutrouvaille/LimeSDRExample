@@ -1,10 +1,16 @@
-r:
-	g++ -std=c++11 rx.cpp -lSoapySDR && mv a.out out.rx && ./out.rx 0009070105C63425
-t:
-	g++ -std=c++11 tx.cpp -lSoapySDR && mv a.out out.tx && ./out.tx 0009070105C62B2B
-	
-# rrr:
-# 	g++ -std=c++11 reset.cpp -lSoapySDR && mv a.out r && ./r 0009070105C63425 && rm r
+# designed to work on a machine with 2 limesdrs,
+# but will work when only 1 is present.
 
-ttt:
-	g++ -std=c++11 reset.cpp -lSoapySDR && mv a.out r && ./r 0009070105C62B2B && rm r
+# get the serial number for the first device
+R:=$(shell ./serialof.sh 0)
+T:=$(shell ./serialof.sh 1)
+
+r:
+	g++ -std=c++11 rx.cpp -lSoapySDR -o out.rx && ./out.rx $(R)
+t:
+	g++ -std=c++11 tx.cpp -lSoapySDR -o out.tx && ./out.tx $(T)
+	
+
+reset: export device?=1
+reset: 
+	g++ -std=c++11 reset.cpp -lSoapySDR && mv a.out r && ./r $(shell ./serialof.sh $(device)) && rm r

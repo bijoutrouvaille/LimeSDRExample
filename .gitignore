@@ -1,2 +1,4 @@
 out.rx
 out.tx
+*.wav
+*.csv
